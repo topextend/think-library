@@ -4,7 +4,7 @@
 // |----------------------------------------------------------------------
 // |Date         : 2020-07-08 16:36:17
 // |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:27:23
+// |LastEditTime : 2020-12-24 00:28:11
 // |----------------------------------------------------------------------
 // |LastEditors  : Jarmin <edshop@qq.com>
 // |----------------------------------------------------------------------
@@ -15,6 +15,11 @@
 // |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 namespace think\admin\extend;
+
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
 
 /**
  * 导出 CSV 文件扩展
@@ -72,5 +77,15 @@ class ExcelExtend
         [$temp, $attr] = [$data, explode('.', trim($rule, '.'))];
         while ($key = array_shift($attr)) $temp = $temp[$key] ?? $temp;
         return (is_string($temp) || is_numeric($temp)) ? @iconv('utf-8', 'gbk//TRANSLIT', "{$temp}") : '';
+    }
+
+    public static function export()
+    {
+        //
+    }
+
+    public static function import()
+    {
+        //
     }
 }
