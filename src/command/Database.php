@@ -40,7 +40,7 @@ class Database extends Command
     /**
      * @param Input $input
      * @param Output $output
-     * @return mixed
+     * @return void
      */
     public function execute(Input $input, Output $output): void
     {

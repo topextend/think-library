@@ -65,7 +65,7 @@ class Queue extends Command
      * 执行指令内容
      * @param Input $input
      * @param Output $output
-     * @return mixed
+     * @return void
      */
     public function execute(Input $input, Output $output)
     {

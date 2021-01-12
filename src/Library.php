@@ -19,11 +19,12 @@ namespace think\admin;
 use think\admin\command\Database;
 use think\admin\command\Install;
 use think\admin\command\Queue;
+use think\admin\command\Replace;
 use think\admin\command\Version;
+use think\admin\multiple\BuildUrl;
 use think\admin\multiple\command\Build;
 use think\admin\multiple\command\Clear;
 use think\admin\multiple\Multiple;
-use think\admin\multiple\BuildUrl;
 use think\admin\service\AdminService;
 use think\admin\service\SystemService;
 use think\middleware\LoadLangPack;
@@ -42,7 +43,7 @@ class Library extends Service
     /**
      * 版本号
      */
-    const VERSION = '1.0.1';
+    const VERSION = '6.0.22';
 
     /**
      * 启动服务
@@ -55,15 +56,23 @@ class Library extends Service
             $request->filter(['trim']);
             // 注册多应用中间键
             $this->app->middleware->add(Multiple::class);
-            // 解决 HTTP 调用 Console 之后 URL 生成的问题
-            if (!$request->isCli()) $request->setHost($request->host());
+            // 判断访问模式兼容处理
+            if ($request->isCli()) {
+                // 兼容 CLI 访问控制器
+                if (empty($_SERVER['REQUEST_URI']) && isset($_SERVER['argv'][1])) {
+                    $request->setPathinfo($_SERVER['argv'][1]);
+                }
+            } else {
+                // 兼容 HTTP 调用 Console 后 URL 问题
+                $request->setHost($request->host());
+            }
         });
         // 替换 ThinkPHP 地址
         $this->app->bind('think\route\Url', BuildUrl::class);
         // 替换 ThinkPHP 指令
         $this->commands(['build' => Build::class, 'clear' => Clear::class]);
         // 注册 ThinkAdmin 指令
-        $this->commands([Queue::class, Install::class, Version::class, Database::class]);
+        $this->commands([Queue::class, Install::class, Version::class, Database::class, Replace::class]);
         // 动态应用运行参数
         SystemService::instance()->bindRuntime();
     }
@@ -76,12 +85,8 @@ class Library extends Service
         // 加载中文语言
         $this->app->lang->load(__DIR__ . '/lang/zh-cn.php', 'zh-cn');
         $this->app->lang->load(__DIR__ . '/lang/en-us.php', 'en-us');
-        // 判断访问模式，兼容 CLI 访问控制器
-        if ($this->app->request->isCli()) {
-            if (empty($_SERVER['REQUEST_URI']) && isset($_SERVER['argv'][1])) {
-                $this->app->request->setPathinfo($_SERVER['argv'][1]);
-            }
-        } else {
+        // 终端 HTTP 访问处理
+        if (!$this->app->request->isCli()) {
             $issess = intval($this->app->request->get('not_init_session', '0')) === 0;
             $notapi = stripos($this->app->request->header('user_agent', ''), 'PHP Yar RPC-') === false;
             if ($notapi && $issess) {
