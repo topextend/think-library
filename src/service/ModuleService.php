@@ -4,7 +4,7 @@
 // |----------------------------------------------------------------------
 // |Date         : 2020-07-08 16:36:17
 // |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:30:43
+// |LastEditTime : 2021-01-12 17:05:40
 // |----------------------------------------------------------------------
 // |LastEditors  : Jarmin <edshop@qq.com>
 // |----------------------------------------------------------------------
@@ -109,7 +109,7 @@ class ModuleService extends Service
     {
         $data = $this->app->cache->get('moduleOnlineData', []);
         if (!empty($data)) return $data;
-        $result = json_decode(HttpExtend::get($this->server . '/admin/api.update/version'), true);
+        $result = json_decode(HttpExtend::get($this->server . '/api/update/version'), true);
         if (isset($result['code']) && $result['code'] > 0 && isset($result['data']) && is_array($result['data'])) {
             $this->app->cache->set('moduleOnlineData', $result['data'], 30);
             return $result['data'];
@@ -218,7 +218,7 @@ class ModuleService extends Service
      */
     public function grenerateDifference(array $rules = [], array $ignore = [], array $result = []): array
     {
-        $online = json_decode(HttpExtend::post($this->server . '/admin/api.update/node', [
+        $online = json_decode(HttpExtend::post($this->server . '/api/update/node', [
             'rules' => json_encode($rules), 'ignore' => json_encode($ignore),
         ]), true);
         if (empty($online['code'])) return $result;
@@ -292,7 +292,7 @@ class ModuleService extends Service
      */
     private function _downloadUpdateFile(string $encode)
     {
-        $source = $this->server . '/admin/api.update/get?encode=' . $encode;
+        $source = $this->server . '/api/update/get?encode=' . $encode;
         $result = json_decode(HttpExtend::get($source), true);
         if (empty($result['code'])) return false;
         $filename = $this->root . decode($encode);
