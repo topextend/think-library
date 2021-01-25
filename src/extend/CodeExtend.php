@@ -14,6 +14,8 @@
 // |----------------------------------------------------------------------
 // |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
+declare (strict_types=1);
+
 namespace think\admin\extend;
 
 /**
