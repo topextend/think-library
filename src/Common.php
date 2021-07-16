@@ -4,13 +4,13 @@
 // |----------------------------------------------------------------------
 // |Date         : 2020-07-08 16:36:17
 // |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:32:18
+// |@LastEditTime : 2021-07-16 20:54:46
 // |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |----------------------------------------------------------------------
 // |Description  : Class Common
 // |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\common.php
+// |@FilePath     : Common.php
 // |----------------------------------------------------------------------
 // |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
@@ -325,5 +325,18 @@ if (!function_exists('down_file')) {
     function down_file(string $source, bool $force = false, int $expire = 0): string
     {
         return Storage::down($source, $force, $expire)['url'] ?? $source;
+    }
+}
+if (!function_exists('format_values')) {
+    /**
+     * 格式字符串
+     * @param string $replacement 要替换的值
+     * @param string $subject 替换前值
+     * @return string
+     */
+    function format_values(string $replacement , string $subject): string
+    {
+        $result = preg_replace("/(@)|(#)|(,)|(。)|(，)/", $replacement, $subject);
+        return rtrim(preg_replace("/( )/", "", $result),',');
     }
 }
