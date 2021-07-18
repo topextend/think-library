@@ -68,14 +68,14 @@ abstract class Helper
 
     /**
      * 获取数据库对象
-     * @param Model|Query|string $dbQuery
+     * @param Model|BaseQuery|string $dbQuery
      * @return Query|mixed
      */
     protected function buildQuery($dbQuery)
     {
         if (is_string($dbQuery)) {
             $this->query = $this->app->db->name($dbQuery);
-        } elseif ($dbQuery instanceof \think\Model) {
+        } elseif ($dbQuery instanceof Model) {
             $this->model = $dbQuery;
             $this->query = $dbQuery->db();
         } elseif ($dbQuery instanceof BaseQuery) {

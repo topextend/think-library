@@ -297,6 +297,7 @@ class SystemService extends Service
     public function clearRuntime(): void
     {
         $data = $this->getRuntime();
+        $this->app->cache->clear();
         $this->app->console->call('clear', ['--dir']);
         $this->setRuntime($data['mode'], $data['appmap'], $data['domain']);
     }
