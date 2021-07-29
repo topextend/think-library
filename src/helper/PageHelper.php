@@ -23,6 +23,7 @@ use think\db\BaseQuery;
 use think\db\exception\DataNotFoundException;
 use think\db\exception\DbException;
 use think\db\exception\ModelNotFoundException;
+use think\exception\HttpResponseException;
 use think\Model;
 
 /**
@@ -49,19 +50,7 @@ class PageHelper extends Helper
     public function init($dbQuery, bool $page = true, bool $display = true, $total = false, int $limit = 0, string $template = ''): array
     {
         $this->query = $this->buildQuery($dbQuery);
-        // 数据列表排序自动处理
-        if ($this->app->request->isPost() && $this->app->request->post('action') === 'sort') {
-            if (method_exists($this->query, 'getTableFields') && in_array('sort', $this->query->getTableFields())) {
-                if ($this->app->request->has($pk = $this->query->getPk() ?: 'id', 'post')) {
-                    $map = [$pk => $this->app->request->post($pk, 0)];
-                    $data = ['sort' => intval($this->app->request->post('sort', 0))];
-                    if ($this->app->db->table($this->query->getTable())->where($map)->update($data) !== false) {
-                        $this->class->success(lang('think_library_sort_success'), '');
-                    }
-                }
-            }
-            $this->class->error(lang('think_library_sort_error'));
-        }
+        if ($this->app->request->isPost()) $this->_listSort();
         if ($page) {
             if ($limit <= 1) {
                 $limit = $this->app->request->get('limit', $this->app->cookie->get('limit', 20));
@@ -93,5 +82,65 @@ class PageHelper extends Helper
             }
         }
         return $result;
+    }
+
+    /**
+     * 组件 Layui.Table 处理
+     * @param Model|BaseQuery|string $dbQuery
+     * @param string $template
+     * @return array
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function layTable($dbQuery, string $template = ''): array
+    {
+        $get = $this->app->request->get();
+        $this->query = $this->buildQuery($dbQuery);
+        if ($this->app->request->isPost()) $this->_listSort();
+        if (($get['output'] ?? '') === 'json') {
+            return PageHelper::instance()->init($dbQuery);
+        } elseif (($get['output'] ?? '') === 'layui.table') {
+            // 根据参数排序
+            if (isset($get['_field_']) && isset($get['_order_'])) {
+                $this->query->order("{$get['_field_']} {$get['_order_']}");
+            }
+            // 数据分页处理
+            if (isset($get['page']) && isset($get['limit'])) {
+                $rows = $get['limit'] ?: 20;
+                $data = $this->query->paginate(['list_rows' => $rows, 'query' => $get], false)->toArray();
+                $result = ['msg' => '', 'code' => 0, 'count' => $data['total'], 'data' => $data['data']];
+            } else {
+                $data = $this->query->select()->toArray();
+                $result = ['msg' => '', 'code' => 0, 'count' => count($data), 'data' => $data];
+            }
+            if (false !== $this->class->callback('_page_filter', $result['data'])) {
+                throw new HttpResponseException(json($result));
+            } else {
+                return $result;
+            }
+        } else {
+            $this->class->fetch($template);
+        }
+    }
+
+    /**
+     * 数据列表排序自动处理
+     * @throws DbException
+     */
+    private function _listSort()
+    {
+        if ($this->app->request->isPost() && $this->app->request->post('action') === 'sort') {
+            if (method_exists($this->query, 'getTableFields') && in_array('sort', $this->query->getTableFields())) {
+                if ($this->app->request->has($pk = $this->query->getPk() ?: 'id', 'post')) {
+                    $map = [$pk => $this->app->request->post($pk, 0)];
+                    $data = ['sort' => intval($this->app->request->post('sort', 0))];
+                    if ($this->app->db->table($this->query->getTable())->where($map)->update($data) !== false) {
+                        $this->class->success(lang('think_library_sort_success'), '');
+                    }
+                }
+            }
+            $this->class->error(lang('think_library_sort_error'));
+        }
     }
 }

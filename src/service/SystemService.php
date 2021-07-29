@@ -379,6 +379,18 @@ class SystemService extends Service
     }
 
     /**
+     * 初始化命令行主程序
+     * @param App|null $app
+     * @throws Exception
+     */
+    public function doConsoleInit(?App $app = null): void
+    {
+        $this->app = $app ?: $this->app;
+        $this->app->debug($this->isDebug());
+        $this->app->console->run();
+    }
+
+    /**
      * 获取唯一数组参数
      * @param array ...$args
      * @return array
