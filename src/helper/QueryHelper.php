@@ -1,18 +1,18 @@
 <?php
 // -----------------------------------------------------------------------
-// |Author       : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Date         : 2020-07-08 16:36:17
-// |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:29:05
-// |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Description  : Class QueryHepler
-// |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\helper\QueryHelper.php
-// |----------------------------------------------------------------------
-// |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
+// |@Author       : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Date         : 2021-08-01 11:23:21
+// |@----------------------------------------------------------------------
+// |@LastEditTime : 2021-08-01 17:12:15
+// |@----------------------------------------------------------------------
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Description  : 
+// |@----------------------------------------------------------------------
+// |@FilePath     : QueryHelper.php
+// |@----------------------------------------------------------------------
+// |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 declare (strict_types=1);
 
@@ -36,6 +36,18 @@ use think\Model;
 class QueryHelper extends Helper
 {
     /**
+     * 分页助手工具
+     * @var PageHelper
+     */
+    protected $page;
+
+    /**
+     * 当前数据操作
+     * @var Query
+     */
+    protected $query;
+
+    /**
      * 初始化默认数据
      * @var array
      */
@@ -55,11 +67,13 @@ class QueryHelper extends Helper
      * @param Model|BaseQuery|string $dbQuery
      * @param string|array|null $input 输入数据
      * @return $this
+     * @throws DbException
      */
     public function init($dbQuery, $input = null): QueryHelper
     {
-        $this->query = $this->buildQuery($dbQuery);
+        $this->page = PageHelper::instance();
         $this->input = $this->getInputData($input);
+        $this->query = $this->page->autoSortQuery($dbQuery);
         return $this;
     }
 
@@ -190,20 +204,7 @@ class QueryHelper extends Helper
      */
     public function page(bool $page = true, bool $display = true, $total = false, int $limit = 0, string $template = ''): array
     {
-        return PageHelper::instance()->init($this->query, $page, $display, $total, $limit, $template);
-    }
-
-    /**
-     * Layui.Table 组件数据
-     * @param string $template
-     * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
-     */
-    public function layTable(string $template = ''): array
-    {
-        return PageHelper::instance()->layTable($this->query, $template);
+        return $this->page->init($this->query, $page, $display, $total, $limit, $template);
     }
 
     /**
@@ -215,6 +216,30 @@ class QueryHelper extends Helper
         $table = $this->query->getTable();
         $this->app->db->execute("truncate table `{$table}`");
         return $this;
+    }
+
+    /**
+     * Layui.Table 组件数据
+     * @param ?callable $befor 表单前置操作
+     * @param ?callable $after 表单后置操作
+     * @param string $template 前端模板文件
+     * @throws DataNotFoundException
+     * @throws DbException
+     * @throws ModelNotFoundException
+     */
+    public function layTable(?callable $befor = null, ?callable $after = null, string $template = '')
+    {
+        if ($this->output === 'get.layui.table') {
+            if (is_callable($after)) {
+                call_user_func($after, $this, $this->query);
+            }
+            $this->page->layTable($this->query, $template);
+        } else {
+            if (is_callable($befor)) {
+                call_user_func($befor, $this, $this->query);
+            }
+            $this->class->fetch($template);
+        }
     }
 
     /**

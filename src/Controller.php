@@ -1,18 +1,18 @@
 <?php
 // -----------------------------------------------------------------------
-// |Author       : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Date         : 2020-07-08 16:36:17
-// |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:32:26
-// |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Description  : Class Controller
-// |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\Controller.php
-// |----------------------------------------------------------------------
-// |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
+// |@Author       : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Date         : 2021-08-01 11:23:21
+// |@----------------------------------------------------------------------
+// |@LastEditTime : 2021-08-01 17:16:22
+// |@----------------------------------------------------------------------
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Description  : 
+// |@----------------------------------------------------------------------
+// |@FilePath     : Controller.php
+// |@----------------------------------------------------------------------
+// |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 declare (strict_types=1);
 
@@ -77,6 +77,7 @@ abstract class Controller extends stdClass
         $this->app = $app;
         $this->request = $app->request;
         $this->app->bind('think\admin\Controller', $this);
+        // 过滤基础方法访问
         if (in_array($this->request->action(), get_class_methods(__CLASS__))) {
             $this->error('Access without permission.');
         }
@@ -189,6 +190,7 @@ abstract class Controller extends stdClass
      * @param Model|BaseQuery|string $dbQuery
      * @param array|string|null $input
      * @return QueryHelper
+     * @throws DbException
      */
     protected function _query($dbQuery, $input = null): QueryHelper
     {

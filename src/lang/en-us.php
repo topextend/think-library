@@ -1,18 +1,18 @@
 <?php
 // -----------------------------------------------------------------------
-// |Author       : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Date         : 2020-07-08 16:36:17
-// |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:29:39
-// |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Description  : Lang of En_us
-// |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\lang\en-us.php
-// |----------------------------------------------------------------------
-// |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
+// |@Author       : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Date         : 2021-08-01 11:23:21
+// |@----------------------------------------------------------------------
+// |@LastEditTime : 2021-08-01 17:12:32
+// |@----------------------------------------------------------------------
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Description  : 
+// |@----------------------------------------------------------------------
+// |@FilePath     : en-us.php
+// |@----------------------------------------------------------------------
+// |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 return [
     'think_library_not_auth'            => 'Sorry, no permission to access the operation.',
@@ -30,8 +30,8 @@ return [
     'think_library_queue_exist'         => 'Task has been created, please wait for processing to complete.',
     'think_library_response_failed'     => 'Server interface response exception.',
     'think_library_response_success'    => 'Server interface response succeeded.',
-    'think_library_params_failed_empty' => 'Interface request parameter %s cannot be empty.',
     'think_library_params_failed_auth'  => 'Interface account authentication failed.',
     'think_library_params_failed_time'  => 'Interface request time difference is too large.',
     'think_library_params_failed_sign'  => 'Interface request signature verification failed.',
+    'think_library_params_failed_empty' => 'Interface request parameter %s cannot be empty.',
 ];

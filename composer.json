@@ -2,7 +2,7 @@
   "type": "library",
   "name": "topextend/think-library",
   "license": "MIT",
-  "description": "ThinkPHP v6.0 Development Library",
+  "description": "ThinkPHP v6.0 Library",
   "authors": [
     {
       "name": "Jarmin",

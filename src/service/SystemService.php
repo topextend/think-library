@@ -1,18 +1,18 @@
 <?php
 // -----------------------------------------------------------------------
-// |Author       : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Date         : 2020-07-08 16:36:17
-// |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:31:15
-// |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Description  : Class SystemService
-// |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\service\SystemService.php
-// |----------------------------------------------------------------------
-// |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
+// |@Author       : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Date         : 2021-08-01 11:23:21
+// |@----------------------------------------------------------------------
+// |@LastEditTime : 2021-08-01 17:15:08
+// |@----------------------------------------------------------------------
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Description  : 
+// |@----------------------------------------------------------------------
+// |@FilePath     : SystemService.php
+// |@----------------------------------------------------------------------
+// |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 declare (strict_types=1);
 
@@ -324,10 +324,12 @@ class SystemService extends Service
         $data['mode'] = $mode ?: $data['mode'];
         $data['appmap'] = $this->uniqueArray($data['appmap'], $appmap);
         $data['domain'] = $this->uniqueArray($data['domain'], $domain);
+
         // 组装配置文件格式
         $rows[] = "mode = {$data['mode']}";
         foreach ($data['appmap'] as $key => $item) $rows[] = "appmap[{$key}] = {$item}";
         foreach ($data['domain'] as $key => $item) $rows[] = "domain[{$key}] = {$item}";
+
         // 数据配置保存文件
         $env = $this->app->getRootPath() . 'runtime/.env';
         file_put_contents($env, "[RUNTIME]\n" . join("\n", $rows));

@@ -1,6 +1,7 @@
 .git
 .svn
 .idea
+.DS_Store
 !.gitignore
 !composer.json
 /composer.lock

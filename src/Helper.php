@@ -1,18 +1,18 @@
 <?php
 // -----------------------------------------------------------------------
-// |Author       : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Date         : 2020-07-08 16:36:17
-// |----------------------------------------------------------------------
-// |LastEditTime : 2020-12-23 21:32:41
-// |----------------------------------------------------------------------
-// |LastEditors  : Jarmin <edshop@qq.com>
-// |----------------------------------------------------------------------
-// |Description  : Class Helper
-// |----------------------------------------------------------------------
-// |FilePath     : \think-library\src\Helper.php
-// |----------------------------------------------------------------------
-// |Copyright (c) 2020 http://www.ladmin.cn   All rights reserved. 
+// |@Author       : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Date         : 2021-08-01 11:23:21
+// |@----------------------------------------------------------------------
+// |@LastEditTime : 2021-08-01 17:16:37
+// |@----------------------------------------------------------------------
+// |@LastEditors  : Jarmin <jarmin@ladmin.cn>
+// |@----------------------------------------------------------------------
+// |@Description  : 
+// |@----------------------------------------------------------------------
+// |@FilePath     : Helper.php
+// |@----------------------------------------------------------------------
+// |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // -----------------------------------------------------------------------
 declare (strict_types=1);
 
@@ -38,32 +38,35 @@ abstract class Helper
     public $app;
 
     /**
-     * 数据模型实例
-     * @var Model
-     */
-    public $model;
-
-    /**
-     * 数据查询实例
-     * @var Query
-     */
-    public $query;
-
-    /**
      * 控制器实例
      * @var Controller
      */
     public $class;
 
     /**
+     * 当前请求方式
+     * @var string
+     */
+    public $method;
+
+    /**
+     * 自定输出格式
+     * @var string
+     */
+    public $output;
+
+    /**
      * Helper constructor.
      * @param App $app
      * @param Controller $class
      */
-    public function __construct(Controller $class, App $app)
+    public function __construct(App $app, Controller $class)
     {
         $this->app = $app;
         $this->class = $class;
+        // 计算指定输出格式
+        $this->method = $app->request->method() ?: ($app->request->isCli() ? 'cli' : 'nil');
+        $this->output = strtolower("{$this->method}.{$app->request->request('output', 'default')}");
     }
 
     /**
@@ -74,19 +77,12 @@ abstract class Helper
     protected function buildQuery($dbQuery)
     {
         if (is_string($dbQuery)) {
-            if (stripos($dbQuery, '\\') !== false) {
-                $this->model = new $dbQuery;
-                $this->query = $this->model->db();
-            } else {
-                $this->query = $this->app->db->name($dbQuery);
-            }
-        } elseif ($dbQuery instanceof Model) {
-            $this->model = $dbQuery;
-            $this->query = $this->model->db();
-        } elseif ($dbQuery instanceof BaseQuery) {
-            $this->query = $dbQuery;
+            $isClass = stripos($dbQuery, '\\') !== false;
+            $dbQuery = $isClass ? new $dbQuery : $this->app->db->name($dbQuery);
         }
-        return $this->query;
+        if ($dbQuery instanceof Query) return $dbQuery;
+        if ($dbQuery instanceof Model) return $dbQuery->db();
+        return $dbQuery;
     }
 
     /**
