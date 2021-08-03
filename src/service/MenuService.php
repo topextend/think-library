@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-01 17:14:23
+// |@LastEditTime : 2021-08-03 15:15:16
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -90,7 +90,8 @@ class MenuService extends Service
                 unset($menus[$key]);
             } else {
                 $node = join('/', array_slice(explode('/', $menu['url']), 0, 3));
-                $menu['url'] = url($menu['url'])->build() . ($menu['params'] ? '?' . $menu['params'] : '');
+                $addons = preg_match('/addons/', $menu['url']) ? "/addons" : '';
+                $menu['url'] = $addons. url($menu['url'])->build() . ($menu['params'] ? '?' . $menu['params'] : '');
                 if (!$service->check($node)) unset($menus[$key]);
             }
         }

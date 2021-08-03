@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-01 17:16:15
+// |@LastEditTime : 2021-08-03 14:43:12
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -338,5 +338,16 @@ if (!function_exists('format_values')) {
     {
         $result = preg_replace("/(@)|(#)|(,)|(。)|(，)/", $replacement, $subject);
         return rtrim(preg_replace("/( )/", "", $result),',');
+    }
+}
+if (!function_exists('getAddonsPath')) {
+    /**
+     * 获取插件目录
+     * @access public
+     * @return string
+     */
+    function getAddonsPath(): string
+    {
+        return $this->rootPath . 'addons' . DIRECTORY_SEPARATOR;
     }
 }

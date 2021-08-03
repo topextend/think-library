@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-01 17:14:45
+// |@LastEditTime : 2021-08-03 15:23:32
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -51,6 +51,8 @@ class NodeService extends Service
      */
     public function getCurrent(string $type = ''): string
     {
+        $url = preg_replace("/.html/", '', $this->app->request->baseUrl());
+        $space = $this->app->getNamespace();
         $prefix = strtolower($this->app->http->getName());
         // 获取应用前缀节点
         if ($type === 'module') return $prefix;
@@ -58,7 +60,7 @@ class NodeService extends Service
         $middle = $this->nameTolower($this->app->request->controller());
         if ($type === 'controller') return $prefix . '/' . $middle;
         // 获取完整的权限节点
-        return $prefix . '/' . $middle . '/' . strtolower($this->app->request->action());
+        return preg_match('/addons/', $url) ? $url : $prefix . '/' . $middle . '/' . strtolower($this->app->request->action());
     }
 
     /**
@@ -115,13 +117,15 @@ class NodeService extends Service
         }
         /*! 排除内置方法，禁止访问内置方法 */
         $ignores = get_class_methods('\think\admin\Controller');
+        $scanPath = array_merge($this->scanDirectory($this->app->getBasePath()),$this->scanDirectory($this->getAddonsPath()));
         /*! 扫描所有代码控制器节点，更新节点缓存 */
-        foreach ($this->scanDirectory($this->app->getBasePath()) as $file) {
+        foreach ($scanPath as $file) {
             $name = substr($file, strlen(strtr($this->app->getRootPath(), '\\', '/')) - 1);
             if (preg_match("|^([\w/]+)/(\w+)/controller/(.+)\.php$|i", $name, $matches)) {
                 [, $namespace, $appname, $classname] = $matches;
+                $addons = preg_match('|/addons$|', $namespace) ? '/addons' : '';
                 $class = new ReflectionClass(strtr("{$namespace}/{$appname}/controller/{$classname}", '/', '\\'));
-                $prefix = strtolower(strtr("{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
+                $prefix = strtolower(strtr("{$addons}/{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
                 $data[$prefix] = $this->_parseComment($class->getDocComment() ?: '', $classname);
                 foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                     if (in_array($metname = $method->getName(), $ignores)) continue;
@@ -172,5 +176,15 @@ class NodeService extends Service
             }
         }
         return $data;
+    }
+
+    /**
+     * 获取插件目录
+     * @access public
+     * @return string
+     */
+    public function getAddonsPath(): string
+    {
+        return $this->app->getRootPath() . 'addons' . DIRECTORY_SEPARATOR;
     }
 }

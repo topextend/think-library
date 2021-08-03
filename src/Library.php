@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-01 17:16:45
+// |@LastEditTime : 2021-08-03 15:24:47
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -120,5 +120,10 @@ class Library extends Service
         // 动态加载应用初始化系统函数
         [$ds, $base] = [DIRECTORY_SEPARATOR, $this->app->getBasePath()];
         foreach (glob("{$base}*{$ds}sys.php") as $file) includeFile($file);
+        // 动态加载插件初始化系统函数
+        $base = "{$this->app->getRootPath()}addons{$ds}";
+        if (file_exists($base) && is_dir($base)) {
+            foreach (glob("{$base}*{$ds}sys.php") as $file) includeFile($file);
+        }
     }
 }
