@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-03 15:23:32
+// |@LastEditTime : 2021-08-03 17:56:38
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -51,7 +51,7 @@ class NodeService extends Service
      */
     public function getCurrent(string $type = ''): string
     {
-        $url = preg_replace("/.html/", '', $this->app->request->baseUrl());
+        $url = substr(preg_replace("/.html/", '', $this->app->request->baseUrl()), 1);
         $space = $this->app->getNamespace();
         $prefix = strtolower($this->app->http->getName());
         // 获取应用前缀节点
@@ -123,9 +123,9 @@ class NodeService extends Service
             $name = substr($file, strlen(strtr($this->app->getRootPath(), '\\', '/')) - 1);
             if (preg_match("|^([\w/]+)/(\w+)/controller/(.+)\.php$|i", $name, $matches)) {
                 [, $namespace, $appname, $classname] = $matches;
-                $addons = preg_match('|/addons$|', $namespace) ? '/addons' : '';
+                $addons = preg_match('|/addons$|', $namespace) ? 'addons/' : '';
                 $class = new ReflectionClass(strtr("{$namespace}/{$appname}/controller/{$classname}", '/', '\\'));
-                $prefix = strtolower(strtr("{$addons}/{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
+                $prefix = strtolower(strtr("{$addons}{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
                 $data[$prefix] = $this->_parseComment($class->getDocComment() ?: '', $classname);
                 foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                     if (in_array($metname = $method->getName(), $ignores)) continue;

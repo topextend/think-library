@@ -87,5 +87,4 @@ class Database extends Command
         }
         $this->setQueueSuccess("已完成对 {$total} 张数据表优化操作");
     }
-
 }
