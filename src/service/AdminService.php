@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-04 22:06:46
+// |@LastEditTime : 2021-08-05 13:04:35
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -116,10 +116,14 @@ class AdminService extends Service
         [$nodes, $pnodes, $methods] = [[], [], array_reverse(NodeService::instance()->getMethods())];
         foreach ($methods as $node => $method) {
             [$count, $pnode] = [substr_count($node, '/'), substr($node, 0, strripos($node, '/'))];
-            if ($count === 3 && !empty($method['isauth'])) {
+            if (preg_match('/addons/', $pnode)) {
+                if ($count === 3 && !empty($method['isauth'])) {
+                    in_array($pnode, $pnodes) or array_push($pnodes, $pnode);
+                    $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
+                }
+            }
+            if ($count === 2 && !empty($method['isauth'])) {
                 in_array($pnode, $pnodes) or array_push($pnodes, $pnode);
-                $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-            } elseif ($count === 2 && !empty($method['isauth'])) {
                 $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
             } elseif ($count === 1 && in_array($pnode, $pnodes)) {
                 $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
@@ -133,7 +137,7 @@ class AdminService extends Service
                 $node  = substr($node, 0, strripos($node, '/'));
                 $nodes[$node] = ['node' => $node, 'title' => $pnode, 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
                 $pnode = substr($node, 0, strripos($node, '/'));
-                $title = ucfirst(str_replace('addons/','',$node));
+                $title = get_addons_info(str_replace('addons/','',$node))['title'];
                 $nodes[$node] = ['node' => $node, 'title' => $title, 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
             }
             $nodes[$pnode] = ['node' => $pnode, 'title' => ucfirst($pnode), 'pnode' => '', 'checked' => in_array($pnode, $checkeds)];
