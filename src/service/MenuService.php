@@ -1,10 +1,10 @@
 <?php
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // |@Author       : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
-// |@Date         : 2021-08-01 11:23:21
+// |@Date         : 2021-07-29 17:30:09
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-03 17:57:39
+// |@LastEditTime : 2021-08-10 18:41:06
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -13,7 +13,7 @@
 // |@FilePath     : MenuService.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 declare (strict_types=1);
 
 namespace think\admin\service;
@@ -90,7 +90,7 @@ class MenuService extends Service
                 unset($menus[$key]);
             } else {
                 $node = join('/', array_slice(explode('/', $menu['url']), 0, 3));
-                $addons = preg_match('/addons/', $menu['url']) ? "/addons" : '';
+                $addons = substr_count($menu['url'], '/') > 2 && preg_match('/addons/', $menu['url']) ? "/addons" : '';
                 $menu['url'] = $addons. url($menu['url'])->build() . ($menu['params'] ? '?' . $menu['params'] : '');
                 if (!$service->check($node)) unset($menus[$key]);
             }

@@ -1,10 +1,10 @@
 <?php
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // |@Author       : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-02 21:10:08
+// |@LastEditTime : 2021-08-15 17:53:04
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -13,7 +13,7 @@
 // |@FilePath     : Controller.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 declare (strict_types=1);
 
 namespace think\admin;
@@ -35,6 +35,8 @@ use think\db\exception\ModelNotFoundException;
 use think\exception\HttpResponseException;
 use think\Model;
 use think\Request;
+use think\facade\View;
+use think\Addons;
 
 /**
  * 标准控制器基类
@@ -43,7 +45,6 @@ use think\Request;
  */
 abstract class Controller extends stdClass
 {
-
     /**
      * 应用容器
      * @var App
@@ -89,6 +90,7 @@ abstract class Controller extends stdClass
      */
     protected function initialize()
     {
+        //
     }
 
     /**
@@ -147,7 +149,7 @@ abstract class Controller extends stdClass
             throw new HttpResponseException(view($tpl, $vars));
         }
     }
-
+    
     /**
      * 模板变量赋值
      * @param mixed $name 要显示的模板变量
@@ -308,4 +310,16 @@ abstract class Controller extends stdClass
         }
     }
 
+    /**
+     * 重写获取器  模型层实例获取
+     */
+    public function __get($name)
+    {
+        if (str_prefix($name, 'model')) {
+            $class = $this->app->parseClass('model', str_replace('model','', $name));
+        } else {
+            throw new \think\exception\HttpException(404, '模型层需引用前缀:model');
+        }
+        return invoke($class);
+    }
 }

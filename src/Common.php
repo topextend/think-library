@@ -1,10 +1,10 @@
 <?php
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // |@Author       : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-03 14:43:12
+// |@LastEditTime : 2021-08-15 17:52:59
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -13,7 +13,7 @@
 // |@FilePath     : Common.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 use think\admin\extend\HttpExtend;
 use think\admin\service\AdminService;
 use think\admin\service\QueueService;
@@ -343,11 +343,21 @@ if (!function_exists('format_values')) {
 if (!function_exists('getAddonsPath')) {
     /**
      * 获取插件目录
-     * @access public
      * @return string
      */
     function getAddonsPath(): string
     {
         return $this->rootPath . 'addons' . DIRECTORY_SEPARATOR;
+    }
+}
+if (!function_exists('str_prefix')) {
+    /**
+     * 字符串前缀验证
+     * @param string $str 要验证码的字符串
+     * @param string $priefix 前缀字符
+     */
+    function str_prefix($str, $prefix) : bool
+    {
+        return strpos($str, $prefix) === 0 ? true : false;
     }
 }

@@ -1,10 +1,10 @@
 <?php
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 // |@Author       : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-03 17:56:38
+// |@LastEditTime : 2021-08-15 17:52:05
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -13,7 +13,7 @@
 // |@FilePath     : NodeService.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
-// -----------------------------------------------------------------------
+// ------------------------------------------------------------------------
 declare (strict_types=1);
 
 namespace think\admin\service;
@@ -117,7 +117,8 @@ class NodeService extends Service
         }
         /*! 排除内置方法，禁止访问内置方法 */
         $ignores = get_class_methods('\think\admin\Controller');
-        $scanPath = array_merge($this->scanDirectory($this->app->getBasePath()),$this->scanDirectory($this->getAddonsPath()));
+        $addonsPath = $this->app->addons->getAddonsPath() ? $this->scanDirectory($this->app->addons->getAddonsPath()) : [];
+        $scanPath = array_merge($this->scanDirectory($this->app->getBasePath()), $addonsPath);
         /*! 扫描所有代码控制器节点，更新节点缓存 */
         foreach ($scanPath as $file) {
             $name = substr($file, strlen(strtr($this->app->getRootPath(), '\\', '/')) - 1);
@@ -176,15 +177,5 @@ class NodeService extends Service
             }
         }
         return $data;
-    }
-
-    /**
-     * 获取插件目录
-     * @access public
-     * @return string
-     */
-    public function getAddonsPath(): string
-    {
-        return $this->app->getRootPath() . 'addons' . DIRECTORY_SEPARATOR;
     }
 }
