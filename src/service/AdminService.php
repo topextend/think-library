@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:51:06
+// |@LastEditTime : 2021-08-20 15:05:19
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -132,7 +132,7 @@ class AdminService extends Service
         foreach (array_keys($nodes) as $key) foreach ($methods as $node => $method) if (stripos($key, $node . '/') !== false) {
             $pnode = substr($node, 0, strripos($node, '/'));
             $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-            if (preg_match('/addons/', $node)) {
+            if (preg_match('/addons/', $node) && substr_count($node, '/') > 1) {
                 $pnode = substr($node, 0, strripos($node, '/'));
                 $node  = substr($node, 0, strripos($node, '/'));
                 $nodes[$node] = ['node' => $node, 'title' => $pnode, 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];

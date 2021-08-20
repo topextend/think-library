@@ -15,6 +15,7 @@
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // ------------------------------------------------------------------------
 use think\admin\extend\HttpExtend;
+use think\admin\Helper;
 use think\admin\service\AdminService;
 use think\admin\service\QueueService;
 use think\admin\service\SystemService;
@@ -37,6 +38,18 @@ if (!function_exists('p')) {
     function p($data, bool $new = false, ?string $file = null)
     {
         return SystemService::instance()->putDebug($data, $new, $file);
+    }
+}
+if (!function_exists('M')) {
+    /**
+     * 动态创建模型对象
+     * @param string $name 模型名称
+     * @param array $data 初始数据
+     * @return Model
+     */
+    function M(string $name, array $data = []): Model
+    {
+        return Helper::buildModel($name, $data);
     }
 }
 if (!function_exists('auth')) {

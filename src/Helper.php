@@ -21,7 +21,9 @@ namespace think\admin;
 use think\App;
 use think\Container;
 use think\db\BaseQuery;
+use think\db\Mongo;
 use think\db\Query;
+use think\helper\Str;
 use think\Model;
 
 /**
@@ -70,22 +72,6 @@ abstract class Helper
     }
 
     /**
-     * 获取数据库对象
-     * @param Model|BaseQuery|string $dbQuery
-     * @return Query|mixed
-     */
-    protected function buildQuery($dbQuery)
-    {
-        if (is_string($dbQuery)) {
-            $isClass = stripos($dbQuery, '\\') !== false;
-            $dbQuery = $isClass ? new $dbQuery : $this->app->db->name($dbQuery);
-        }
-        if ($dbQuery instanceof Query) return $dbQuery;
-        if ($dbQuery instanceof Model) return $dbQuery->db();
-        return $dbQuery;
-    }
-
-    /**
      * 实例对象反射
      * @param array $args
      * @return static
@@ -93,5 +79,54 @@ abstract class Helper
     public static function instance(...$args): Helper
     {
         return Container::getInstance()->invokeClass(static::class, $args);
+    }
+
+    /**
+     * 获取数据库查询对象
+     * @param Model|BaseQuery|string $query
+     * @return Query|Mongo|BaseQuery
+     */
+    public static function buildQuery($query)
+    {
+        if (is_string($query)) {
+            return self::buildModel($query)->db();
+        }
+        if ($query instanceof Model) return $query->db();
+        if ($query instanceof BaseQuery && !$query->getModel()) {
+            $query->model(self::buildModel($query->getName()));
+        }
+        return $query;
+    }
+
+    /**
+     * 动态创建模型对象
+     * @param mixed $name 模型名称
+     * @param array $data 初始数据
+     * @param mixed $conn 默认连接
+     * @return Model
+     */
+    public static function buildModel(string $name, array $data = [], string $conn = ''): Model
+    {
+        if (strpos($name, '\\') !== false && class_exists($name)) {
+            $model = new $name($data);
+            if ($model instanceof Model) return $model;
+            $name = basename(str_replace('\\', '/', $name));
+        }
+        $model = new class extends \think\Model {
+            public static $NAME = null;
+            public static $CONN = null;
+
+            public function __construct(array $data = [])
+            {
+                if (is_string(self::$NAME)) {
+                    $this->name = self::$NAME;
+                    $this->connection = self::$CONN;
+                    parent::__construct($data);
+                }
+            }
+        };
+        $model::$CONN = $conn;
+        $model::$NAME = Str::studly($name);
+        return $model->newInstance($data);
     }
 }

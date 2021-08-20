@@ -43,19 +43,23 @@ class DeleteHelper extends Helper
         $query = $this->buildQuery($dbQuery);
         $field = $field ?: ($query->getPk() ?: 'id');
         $value = $this->app->request->post($field);
+
         // 查询限制处理
         if (!empty($where)) $query->where($where);
         if (!isset($where[$field]) && is_string($value)) {
             $query->whereIn($field, str2arr($value));
         }
+
         // 前置回调处理
         if (false === $this->class->callback('_delete_filter', $query, $where)) {
             return null;
         }
+
         // 阻止危险操作
         if (!$query->getOptions('where')) {
             $this->class->error(lang('think_library_delete_error'));
         }
+
         // 组装执行数据
         $data = [];
         if (method_exists($query, 'getTableFields')) {
@@ -67,12 +71,21 @@ class DeleteHelper extends Helper
                 if (in_array('deleted_time', $fields)) $data['deleted_time'] = time();
             }
         }
+
         // 执行删除操作
-        $result = (empty($data) ? $query->delete() : $query->update($data)) !== false;
+        if ($result = (empty($data) ? $query->delete() : $query->update($data)) !== false) {
+            // 模型自定义事件回调
+            $model = $query->getModel();
+            if (method_exists($model, 'onAdminDelete')) {
+                $model->onAdminDelete(strval($value));
+            }
+        }
+
         // 结果回调处理
         if (false === $this->class->callback('_delete_result', $result)) {
             return $result;
         }
+
         // 回复返回结果
         if ($result !== false) {
             $this->class->success(lang('think_library_delete_success'), '');

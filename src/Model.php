@@ -19,11 +19,69 @@ declare (strict_types=1);
 namespace think\admin;
 
 /**
- * 自定义模型基类
- * Class Exception
+ * 基础模型类
+ * Class Model
  * @package think\admin
+ * @see \think\db\Query
+ * @mixin \think\db\Query
  */
-class Model extends \think\Model
+abstract class Model extends \think\Model
 {
-    //
+    protected $autoWriteTimestamp = false;
+
+    /**
+     * 日志名称
+     * @var string
+     */
+    protected $oplogName;
+
+    /**
+     * 日志类型
+     * @var string
+     */
+    protected $oplogType;
+
+    /**
+     * 修改状态默认处理
+     * @param string $ids
+     */
+    public function onAdminSave(string $ids)
+    {
+        if ($this->oplogType && $this->oplogName) {
+            sysoplog($this->oplogType, "修改{$this->oplogName}[{$ids}]状态");
+        }
+    }
+
+    /**
+     * 更新事件默认处理
+     * @param string $ids
+     */
+    public function onAdminUpdate(string $ids)
+    {
+        if ($this->oplogType && $this->oplogName) {
+            sysoplog($this->oplogType, "更新{$this->oplogName}[{$ids}]成功");
+        }
+    }
+
+    /**
+     * 新增事件默认处理
+     * @param string $ids
+     */
+    public function onAdminInsert(string $ids)
+    {
+        if ($this->oplogType && $this->oplogName) {
+            sysoplog($this->oplogType, "增加{$this->oplogName}[{$ids}]成功");
+        }
+    }
+
+    /**
+     * 删除事件默认处理
+     * @param string $ids
+     */
+    public function onAdminDelete(string $ids)
+    {
+        if ($this->oplogType && $this->oplogName) {
+            sysoplog($this->oplogType, "删除{$this->oplogName}[{$ids}]成功");
+        }
+    }
 }

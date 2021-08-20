@@ -19,6 +19,7 @@ declare (strict_types=1);
 namespace think\admin\service;
 
 use Exception;
+use think\admin\Helper;
 use think\admin\Service;
 use think\App;
 use think\db\exception\DataNotFoundException;
@@ -109,7 +110,7 @@ class SystemService extends Service
     /**
      * 数据增量保存
      * @param Model|Query|string $query 数据查询对象
-     * @param array $data 需要保存的数据
+     * @param array $data 需要保存的数据，成功返回对应模型
      * @param string $key 更新条件查询主键
      * @param array $map 额外更新查询条件
      * @return boolean|integer 失败返回 false, 成功返回主键值或 true
@@ -117,22 +118,34 @@ class SystemService extends Service
      * @throws DbException
      * @throws ModelNotFoundException
      */
-    public function save($query, array $data, string $key = 'id', array $map = [])
+    public function save($query, array &$data, string $key = 'id', array $map = [])
     {
-        $query = is_string($query) ? $this->app->db->name($query) : ($query instanceof Model ? $query->db() : $query);
-        if (!$query instanceof Query) throw new ModelNotFoundException('数据库操作对象异常！');
-        [$value] = [$data[$key] ?? null, $query->master()->strict(false)->where($map)];
-        if (empty($map[$key])) if (is_string($value) && strpos($value, ',') !== false) {
-            $query->whereIn($key, str2arr($value));
-        } else {
-            $query->where([$key => $value]);
+        $query = Helper::buildQuery($query)->master()->strict(false);
+        if (empty($map[$key])) {
+            $value = $data[$key] ?? null;
+            if (is_string($value) && strpos($value, ',') !== false) {
+                $query->whereIn($key, str2arr($value));
+            } else {
+                $query->where([$key => $value]);
+            }
         }
-        if (($info = (clone $query)->find()) && !empty($info)) {
-            if ($info instanceof Model) $info = $info->toArray();
-            $query->update($data);
-            return $info[$key] ?? true;
+        if (($model = $query->where($map)->find()) && !empty($model)) {
+            if ($model->save($data) === false) return false;
+            // 模型自定义事件回调
+            if (method_exists($model, 'onAdminUpdate')) {
+                $model->onAdminUpdate(strval($model[$key] ?? ''));
+            }
+            $data = $model->toArray();
+            return $data[$key] ?? true;
         } else {
-            return $query->insertGetId($data);
+            $model = $query->getModel();
+            if ($model->data($data)->save() === false) return false;
+            // 模型自定义事件回调
+            if (method_exists($model, 'onAdminInsert')) {
+                $model->onAdminInsert(strval($model[$key] ?? ''));
+            }
+            $data = $model->toArray();
+            return $model[$key] ?? true;
         }
     }
 
@@ -187,7 +200,8 @@ class SystemService extends Service
      */
     public function setData(string $name, $value)
     {
-        return $this->save('SystemData', ['name' => $name, 'value' => serialize($value)], 'name');
+        $data = ['name' => $name, 'value' => serialize($value)];
+        return $this->save('SystemData', $data, 'name');
     }
 
     /**

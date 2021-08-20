@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:51:57
+// |@LastEditTime : 2021-08-15 18:58:44
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -56,7 +56,7 @@ class ModuleService extends Service
         $this->root = $this->app->getRootPath();
         $this->version = trim(Library::VERSION, 'v');
         $maxVersion = strstr($this->version, '.', true);
-        $this->server = "https://v{$maxVersion}.thinkadmin.top";
+        $this->server = "https://api.ladmin.cn";
     }
 
     /**
@@ -174,7 +174,7 @@ class ModuleService extends Service
     public function getChanges(array $rules, array $ignore = [], array $data = []): array
     {
         // 扫描规则文件
-        foreach ($rules as $key => $rule) {
+        foreach ($rules as $rule) {
             $path = $this->root . strtr(trim($rule, '\\/'), '\\', '/');
             $data = array_merge($data, $this->_scanLocalFileHashList($path));
         }
@@ -244,7 +244,7 @@ class ModuleService extends Service
             } else {
                 return [false, $file['type'], $file['name']];
             }
-        } elseif (in_array($file['type'], ['del'])) {
+        } elseif ($file['type'] == 'del') {
             $real = $this->root . $file['name'];
             if (is_file($real) && unlink($real)) {
                 $this->_removeEmptyDirectory(dirname($real));

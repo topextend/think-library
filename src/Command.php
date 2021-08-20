@@ -80,7 +80,7 @@ abstract class Command extends \think\console\Command
     {
         if (defined('WorkQueueCode')) {
             $this->queue->error($message);
-        } elseif (is_string($message)) {
+        } else {
             $this->output->writeln($message);
             exit("\r\n");
         }
@@ -97,7 +97,7 @@ abstract class Command extends \think\console\Command
     {
         if (defined('WorkQueueCode')) {
             $this->queue->success($message);
-        } elseif (is_string($message)) {
+        } else {
             $this->output->writeln($message);
             exit("\r\n");
         }
