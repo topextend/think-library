@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-16 16:49:41
+// |@LastEditTime : 2021-08-23 17:23:32
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -113,11 +113,7 @@ class Library extends Service
                 } elseif (AdminService::instance()->isLogin()) {
                     return json(['code' => 0, 'info' => lang('think_library_not_auth')])->header($header);
                 } else {
-                    if ($request->get('open_type') == 'iframe') {
-                        return json(['code' => 0, 'info' => lang('think_library_not_login'), 'url' => sysuri('admin/login/index')])->header($header);
-                    } else {
-                        return json(['code' => 0, 'info' => lang('think_library_not_login'), 'url' => sysuri('admin/login/index')])->header($header);
-                    }
+                    return json(['code' => 0, 'info' => lang('think_library_not_login'), 'url' => sysuri('admin/login/index')])->header($header);
                 }
             }, 'route');
         }
