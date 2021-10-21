@@ -22,8 +22,6 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
-use think\admin\Exception;
-use think\exception\HttpResponseException;
 
 /**
  * 导出 CSV 文件扩展

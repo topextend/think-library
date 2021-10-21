@@ -58,7 +58,6 @@ class JsonRpcClient
      */
     public function __call(string $method, array $params = [])
     {
-        // Performs the HTTP POST
         $options = [
             'ssl'  => [
                 'verify_peer'      => false,
@@ -72,6 +71,7 @@ class JsonRpcClient
                 ], JSON_UNESCAPED_UNICODE),
             ],
         ];
+        // Performs the HTTP POST
         if ($fp = fopen($this->proxy, 'r', false, stream_context_create($options))) {
             $response = '';
             while ($row = fgets($fp)) $response .= trim($row) . "\n";
@@ -86,7 +86,7 @@ class JsonRpcClient
         if (is_null($response['error'])) {
             return $response['result'];
         } else {
-            throw new Exception("请求错误：{$response['error']['message']}", $response['error']['code']);
+            throw new Exception($response['error']['message'], $response['error']['code'], $response['result']);
         }
     }
 }

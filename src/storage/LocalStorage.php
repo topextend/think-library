@@ -20,9 +20,6 @@ namespace think\admin\storage;
 
 use Exception;
 use think\admin\Storage;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 本地存储支持
@@ -34,9 +31,9 @@ class LocalStorage extends Storage
 
     /**
      * 初始化入口
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     protected function initialize()
     {
@@ -45,9 +42,11 @@ class LocalStorage extends Storage
         $this->prefix = trim(dirname($this->app->request->baseFile(false)), '\\/');
         if ($type !== 'path') {
             $domain = sysconf('storage.local_http_domain') ?: $this->app->request->host();
-            if ($type === 'auto') $this->prefix = "//{$domain}";
-            elseif ($type === 'http') $this->prefix = "http://{$domain}";
-            elseif ($type === 'https') $this->prefix = "https://{$domain}";
+            if ($type === 'auto') {
+                $this->prefix = "//{$domain}";
+            } elseif (in_array($type, ['http', 'https'])) {
+                $this->prefix = "{$type}://{$domain}";
+            }
         }
     }
 
@@ -56,9 +55,9 @@ class LocalStorage extends Storage
      * @param null|string $name
      * @return static
      * @throws \think\admin\Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public static function instance(?string $name = null)
     {
@@ -172,5 +171,4 @@ class LocalStorage extends Storage
     {
         return url('api/upload/file')->build();
     }
-
 }

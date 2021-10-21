@@ -20,9 +20,6 @@ namespace think\admin\service;
 
 use think\admin\Library;
 use think\admin\Service;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 系统进程管理服务
@@ -37,9 +34,9 @@ class ProcessService extends Service
      * @param string $args 指定参数
      * @param boolean $simple 指令内容
      * @return string
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function think(string $args = '', bool $simple = false): string
     {
@@ -57,9 +54,9 @@ class ProcessService extends Service
      * 检查 Think 运行进程
      * @param string $args
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function thinkQuery(string $args): array
     {
@@ -71,9 +68,9 @@ class ProcessService extends Service
      * @param string $args 执行参数
      * @param integer $usleep 延时时间
      * @return ProcessService
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function thinkCreate(string $args, int $usleep = 0): ProcessService
     {

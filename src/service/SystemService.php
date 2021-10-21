@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:52:20
+// |@LastEditTime : 2021-09-07 16:41:21
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -18,13 +18,13 @@ declare (strict_types=1);
 
 namespace think\admin\service;
 
-use Exception;
+use think\admin\Exception;
 use think\admin\Helper;
+use think\admin\model\SystemConfig;
+use think\admin\model\SystemData;
+use think\admin\model\SystemOplog;
 use think\admin\Service;
 use think\App;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\helper\Str;
 use think\Model;
@@ -44,19 +44,11 @@ class SystemService extends Service
     protected $data = [];
 
     /**
-     * 绑定配置数据表
-     * @var string
-     */
-    protected $table = 'SystemConfig';
-
-    /**
      * 设置配置数据
      * @param string $name 配置名称
      * @param mixed $value 配置内容
      * @return integer|string
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DbException
      */
     public function set(string $name, $value = '')
     {
@@ -69,10 +61,10 @@ class SystemService extends Service
             }
             return $count;
         } else {
-            $this->app->cache->delete($this->table);
+            $this->app->cache->delete('SystemConfig');
             $map = ['type' => $type, 'name' => $field];
             $data = array_merge($map, ['value' => $value]);
-            $query = $this->app->db->name($this->table)->master(true)->where($map);
+            $query = SystemConfig::mk()->master(true)->where($map);
             return (clone $query)->count() > 0 ? $query->update($data) : $query->insert($data);
         }
     }
@@ -82,14 +74,14 @@ class SystemService extends Service
      * @param string $name
      * @param string $default
      * @return array|mixed|string
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function get(string $name = '', string $default = '')
     {
         if (empty($this->data)) {
-            $this->app->db->name($this->table)->cache($this->table)->select()->map(function ($item) {
+            SystemConfig::mk()->cache('SystemConfig')->select()->map(function ($item) {
                 $this->data[$item['type']][$item['name']] = $item['value'];
             });
         }
@@ -112,13 +104,13 @@ class SystemService extends Service
      * @param Model|Query|string $query 数据查询对象
      * @param array $data 需要保存的数据，成功返回对应模型
      * @param string $key 更新条件查询主键
-     * @param array $map 额外更新查询条件
+     * @param mixed $map 额外更新查询条件
      * @return boolean|integer 失败返回 false, 成功返回主键值或 true
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    public function save($query, array &$data, string $key = 'id', array $map = [])
+    public function save($query, array &$data, string $key = 'id', $map = [])
     {
         $query = Helper::buildQuery($query)->master()->strict(false);
         if (empty($map[$key])) {
@@ -132,7 +124,7 @@ class SystemService extends Service
         if (($model = $query->where($map)->find()) && !empty($model)) {
             if ($model->save($data) === false) return false;
             // 模型自定义事件回调
-            if (method_exists($model, 'onAdminUpdate')) {
+            if ($model instanceof \think\admin\Model) {
                 $model->onAdminUpdate(strval($model[$key] ?? ''));
             }
             $data = $model->toArray();
@@ -141,7 +133,7 @@ class SystemService extends Service
             $model = $query->getModel();
             if ($model->data($data)->save() === false) return false;
             // 模型自定义事件回调
-            if (method_exists($model, 'onAdminInsert')) {
+            if ($model instanceof \think\admin\Model) {
                 $model->onAdminInsert(strval($model[$key] ?? ''));
             }
             $data = $model->toArray();
@@ -178,15 +170,16 @@ class SystemService extends Service
         $pre = $this->app->route->buildUrl('@')->suffix(false)->domain($domain)->build();
         $uri = $this->app->route->buildUrl($url, $vars)->suffix($suffix)->domain($domain)->build();
         // 默认节点配置数据
-        $app = $this->app->config->get('app.default_app');
-        $act = Str::lower($this->app->config->get('route.default_action'));
-        $ctr = Str::snake($this->app->config->get('route.default_controller'));
+        $app = $this->app->config->get('route.default_app') ?: 'index';
+        $act = Str::lower($this->app->config->get('route.default_action') ?: 'index');
+        $ctr = Str::snake($this->app->config->get('route.default_controller') ?: 'index');
         // 替换省略链接路径
         return preg_replace([
             "#^({$pre}){$app}/{$ctr}/{$act}(\.{$ext}|^\w|\?|$)?#i",
             "#^({$pre}[\w\.]+)/{$ctr}/{$act}(\.{$ext}|^\w|\?|$)#i",
             "#^({$pre}[\w\.]+)(/[\w\.]+)/{$act}(\.{$ext}|^\w|\?|$)#i",
-        ], ['$1$2', '$1$2', '$1$2$3'], $uri);
+            "#/\.{$ext}$#i",
+        ], ['$1$2', '$1$2', '$1$2$3', ''], $uri);
     }
 
     /**
@@ -194,9 +187,9 @@ class SystemService extends Service
      * @param string $name
      * @param mixed $value
      * @return boolean
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function setData(string $name, $value)
     {
@@ -210,11 +203,22 @@ class SystemService extends Service
      */
     public function getTables(): array
     {
-        $tables = [];
-        foreach ($this->app->db->query("show tables") as $item) {
-            $tables = array_merge($tables, array_values($item));
-        }
+        $tables = $this->app->db->getTables();
         return [$tables, count($tables), 0];
+    }
+
+    /**
+     * 复制并创建表结构
+     * @param string $from 来源表名
+     * @param string $create 创建表名
+     * @param array $tables 现有表集合
+     * @throws \think\admin\Exception
+     */
+    public function copyTableStruct(string $from, string $create, array $tables = [])
+    {
+        if (empty($tables)) [$tables] = $this->getTables();
+        if (!in_array($from, $tables)) throw new Exception("来源表 {$from} 不存在！");
+        $this->app->db->query("CREATE TABLE IF NOT EXISTS {$create} (LIKE {$from})");
     }
 
     /**
@@ -226,9 +230,9 @@ class SystemService extends Service
     public function getData(string $name, $default = [])
     {
         try {
-            $value = $this->app->db->name('SystemData')->where(['name' => $name])->value('value');
+            $value = SystemData::mk()->where(['name' => $name])->value('value');
             return is_null($value) ? $default : unserialize($value);
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             return $default;
         }
     }
@@ -242,7 +246,7 @@ class SystemService extends Service
     public function setOplog(string $action, string $content): bool
     {
         $oplog = $this->getOplog($action, $content);
-        return $this->app->db->name('SystemOplog')->insert($oplog) !== false;
+        return SystemOplog::mk()->insert($oplog) !== false;
     }
 
     /**
@@ -396,8 +400,8 @@ class SystemService extends Service
 
     /**
      * 初始化命令行主程序
-     * @param App|null $app
-     * @throws Exception
+     * @param \think\App|null $app
+     * @throws \Exception
      */
     public function doConsoleInit(?App $app = null): void
     {

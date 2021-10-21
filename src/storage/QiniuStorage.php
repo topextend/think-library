@@ -21,9 +21,6 @@ namespace think\admin\storage;
 use think\admin\Exception;
 use think\admin\extend\HttpExtend;
 use think\admin\Storage;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 七牛云存储支持
@@ -39,10 +36,10 @@ class QiniuStorage extends Storage
 
     /**
      * 初始化入口
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     protected function initialize()
     {
@@ -53,20 +50,21 @@ class QiniuStorage extends Storage
         // 计算链接前缀
         $type = strtolower(sysconf('storage.qiniu_http_protocol'));
         $domain = strtolower(sysconf('storage.qiniu_http_domain'));
-        if ($type === 'auto') $this->prefix = "//{$domain}";
-        elseif ($type === 'http') $this->prefix = "http://{$domain}";
-        elseif ($type === 'https') $this->prefix = "https://{$domain}";
-        else throw new Exception('未配置七牛云URL域名哦');
+        if ($type === 'auto') {
+            $this->prefix = "//{$domain}";
+        } elseif (in_array($type, ['http', 'https'])) {
+            $this->prefix = "{$type}://{$domain}";
+        } else throw new Exception('未配置七牛云URL域名哦');
     }
 
     /**
      * 获取当前实例对象
      * @param null|string $name
      * @return static
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public static function instance(?string $name = null)
     {
@@ -80,10 +78,10 @@ class QiniuStorage extends Storage
      * @param boolean $safe 安全模式
      * @param null|string $attname 下载名称
      * @return array
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function set(string $name, string $file, bool $safe = false, ?string $attname = null): array
     {
@@ -174,10 +172,10 @@ class QiniuStorage extends Storage
     /**
      * 获取文件上传地址
      * @return string
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function upload(): string
     {

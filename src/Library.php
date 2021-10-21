@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-23 17:23:32
+// |@LastEditTime : 2021-10-19 18:20:46
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -43,7 +43,7 @@ class Library extends Service
     /**
      * 版本号
      */
-    const VERSION = '6.0.25';
+    const VERSION = '6.0.24';
 
     /**
      * 启动服务
@@ -53,7 +53,7 @@ class Library extends Service
         // 服务初始化处理
         $this->app->event->listen('HttpRun', function (Request $request) {
             // 配置默认输入过滤
-            $request->filter(['trim']);
+            $request->filter(['trim', 'xss_safe']);
             // 注册多应用中间键
             $this->app->middleware->add(Multiple::class);
             // 判断访问模式兼容处理
@@ -82,7 +82,7 @@ class Library extends Service
      */
     public function register()
     {
-        // 加载中文语言
+        // 加载中文及英文语言包
         $this->app->lang->load(__DIR__ . '/lang/zh-cn.php', 'zh-cn');
         $this->app->lang->load(__DIR__ . '/lang/en-us.php', 'en-us');
         // 终端 HTTP 访问时特殊处理
@@ -98,17 +98,23 @@ class Library extends Service
             // 注册访问处理中间键
             $this->app->middleware->add(function (Request $request, Closure $next) {
                 $header = [];
+                // CORS 跨域规则配置
                 if (($origin = $request->header('origin', '*')) !== '*') {
-                    $header['Access-Control-Allow-Origin'] = $origin;
-                    $header['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE';
-                    $header['Access-Control-Allow-Headers'] = 'Authorization,Content-Type,If-Match,If-Modified-Since,If-None-Match,If-Unmodified-Since,X-Requested-With,Api-Name,Api-Type,Api-Token,User-Form-Token,User-Token,Token';
-                    $header['Access-Control-Expose-Headers'] = 'Api-Name,Api-Type,Api-Token,User-Form-Token,User-Token,Token';
-                    $header['Access-Control-Allow-Credentials'] = 'true';
+                    if (is_string($hosts = $this->app->config->get('app.cors_host', []))) $hosts = str2arr($hosts);
+                    if ($this->app->config->get('app.cors_auto', 1) || in_array(parse_url(strtolower($origin), PHP_URL_HOST), $hosts)) {
+                        $headers = $this->app->config->get('app.cors_headers', 'Api-Name,Api-Type,Api-Token,User-Form-Token,User-Token,Token');
+                        $header['Access-Control-Allow-Origin'] = $origin;
+                        $header['Access-Control-Allow-Methods'] = $this->app->config->get('app.cors_methods', 'GET,PUT,POST,PATCH,DELETE');
+                        $header['Access-Control-Allow-Headers'] = "Authorization,Content-Type,If-Match,If-Modified-Since,If-None-Match,If-Unmodified-Since,X-Requested-With,{$headers}";
+                        $header['Access-Control-Expose-Headers'] = $headers;
+                        $header['Access-Control-Allow-Credentials'] = 'true';
+                    }
                 }
                 // 访问模式及访问权限检查
                 if ($request->isOptions()) {
                     return response()->code(204)->header($header);
                 } elseif (AdminService::instance()->check()) {
+                    $header['X-Frame-Options'] = 'sameorigin';
                     return $next($request)->header($header);
                 } elseif (AdminService::instance()->isLogin()) {
                     return json(['code' => 0, 'info' => lang('think_library_not_auth')])->header($header);
@@ -120,10 +126,5 @@ class Library extends Service
         // 动态加载应用初始化系统函数
         [$ds, $base] = [DIRECTORY_SEPARATOR, $this->app->getBasePath()];
         foreach (glob("{$base}*{$ds}sys.php") as $file) includeFile($file);
-        // 动态加载插件初始化系统函数
-        $base = "{$this->app->getRootPath()}addons{$ds}";
-        if (file_exists($base) && is_dir($base)) {
-            foreach (glob("{$base}*{$ds}sys.php") as $file) includeFile($file);
-        }
     }
 }

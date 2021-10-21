@@ -71,4 +71,49 @@ class CodeExtend
         while (strlen($code) < $size) $code .= rand(0, 9);
         return $code;
     }
+
+    /**
+     * 数据解密处理
+     * @param mixed $data 加密数据
+     * @param string $skey 安全密钥
+     * @return string
+     */
+    public static function encrypt($data, string $skey): string
+    {
+        $iv = static::random(16, 3);
+        $value = openssl_encrypt(serialize($data), 'AES-256-CBC', $skey, 0, $iv);
+        return static::enSafe64(json_encode(['iv' => $iv, 'value' => $value]));
+    }
+
+    /**
+     * 数据加密处理
+     * @param string $data 解密数据
+     * @param string $skey 安全密钥
+     * @return mixed
+     */
+    public static function decrypt(string $data, string $skey)
+    {
+        $attr = json_decode(static::deSafe64($data), true);
+        return unserialize(openssl_decrypt($attr['value'], 'AES-256-CBC', $skey, 0, $attr['iv']));
+    }
+
+    /**
+     * Base64Url 安全编码
+     * @param string $text 待加密文本
+     * @return string
+     */
+    public static function enSafe64(string $text): string
+    {
+        return rtrim(strtr(base64_encode($text), '+/', '-_'), '=');
+    }
+
+    /**
+     * Base64Url 安全解码
+     * @param string $text 待解密文本
+     * @return string
+     */
+    public static function deSafe64(string $text): string
+    {
+        return base64_decode(str_pad(strtr($text, '-_', '+/'), strlen($text) % 4, '='));
+    }
 }

@@ -18,12 +18,11 @@ declare (strict_types=1);
 
 namespace think\admin\service;
 
-use ReflectionException;
 use think\admin\extend\DataExtend;
+use think\admin\model\SystemAuth;
+use think\admin\model\SystemNode;
+use think\admin\model\SystemUser;
 use think\admin\Service;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 系统权限管理服务
@@ -83,7 +82,7 @@ class AdminService extends Service
      * --- 需要读取缓存或扫描所有节点
      * @param null|string $node
      * @return boolean
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public function check(?string $node = ''): bool
     {
@@ -109,19 +108,13 @@ class AdminService extends Service
      * 获取授权节点列表
      * @param array $checkeds
      * @return array
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public function getTree(array $checkeds = []): array
     {
         [$nodes, $pnodes, $methods] = [[], [], array_reverse(NodeService::instance()->getMethods())];
         foreach ($methods as $node => $method) {
             [$count, $pnode] = [substr_count($node, '/'), substr($node, 0, strripos($node, '/'))];
-            if (preg_match('/addons/', $pnode)) {
-                if ($count === 3 && !empty($method['isauth'])) {
-                    in_array($pnode, $pnodes) or array_push($pnodes, $pnode);
-                    $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-                }
-            }
             if ($count === 2 && !empty($method['isauth'])) {
                 in_array($pnode, $pnodes) or array_push($pnodes, $pnode);
                 $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
@@ -132,14 +125,6 @@ class AdminService extends Service
         foreach (array_keys($nodes) as $key) foreach ($methods as $node => $method) if (stripos($key, $node . '/') !== false) {
             $pnode = substr($node, 0, strripos($node, '/'));
             $nodes[$node] = ['node' => $node, 'title' => $method['title'], 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-            if (preg_match('/addons/', $node) && substr_count($node, '/') > 1) {
-                $pnode = substr($node, 0, strripos($node, '/'));
-                $node  = substr($node, 0, strripos($node, '/'));
-                $nodes[$node] = ['node' => $node, 'title' => $pnode, 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-                $pnode = substr($node, 0, strripos($node, '/'));
-                $title = get_addons_info(str_replace('addons/','',$node))['title'];
-                $nodes[$node] = ['node' => $node, 'title' => $title, 'pnode' => $pnode, 'checked' => in_array($node, $checkeds)];
-            }
             $nodes[$pnode] = ['node' => $pnode, 'title' => ucfirst($pnode), 'pnode' => '', 'checked' => in_array($pnode, $checkeds)];
         }
         return DataExtend::arr2tree(array_reverse($nodes), 'node', 'pnode', '_sub_');
@@ -149,22 +134,22 @@ class AdminService extends Service
      * 初始化用户权限
      * @param boolean $force 强刷权限
      * @return $this
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function apply(bool $force = false): AdminService
     {
         if ($force) $this->clearCache();
         if (($uid = $this->app->session->get('user.id'))) {
-            $user = $this->app->db->name('SystemUser')->where(['id' => $uid])->find();
+            $user = SystemUser::mk()->where(['id' => $uid])->find();
             if (!empty($user['authorize']) && !$this->isSuper()) {
-                $db = $this->app->db->name('SystemAuth')->field('id')->where(['status' => 1])->whereIn('id', str2arr($user['authorize']));
-                $user['nodes'] = array_unique($this->app->db->name('SystemAuthNode')->whereRaw("auth in {$db->buildSql()}")->column('node'));
+                $db = SystemAuth::mk()->field('id')->where(['status' => 1])->whereIn('id', str2arr($user['authorize']));
+                $user['nodes'] = array_unique(SystemNode::mk()->whereRaw("auth in {$db->buildSql()}")->column('node'));
             } else {
                 $user['nodes'] = [];
             }
-            $this->app->session->set('user', $user);
+            $this->app->session->set('user', $user->toArray());
         }
         return $this;
     }

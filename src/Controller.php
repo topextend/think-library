@@ -26,17 +26,13 @@ use think\admin\helper\QueryHelper;
 use think\admin\helper\SaveHelper;
 use think\admin\helper\TokenHelper;
 use think\admin\helper\ValidateHelper;
+use think\admin\service\NodeService;
 use think\admin\service\QueueService;
 use think\App;
 use think\db\BaseQuery;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 use think\exception\HttpResponseException;
 use think\Model;
 use think\Request;
-use think\facade\View;
-use think\Addons;
 
 /**
  * 标准控制器基类
@@ -50,6 +46,18 @@ abstract class Controller extends stdClass
      * @var App
      */
     public $app;
+
+    /**
+     * 请求GET参数
+     * @var array
+     */
+    public $get = [];
+
+    /**
+     * 当前节点
+     * @var string
+     */
+    public $node;
 
     /**
      * 请求对象
@@ -76,12 +84,13 @@ abstract class Controller extends stdClass
     public function __construct(App $app)
     {
         $this->app = $app;
-        $this->request = $app->request;
         $this->app->bind('think\admin\Controller', $this);
-        // 过滤基础方法访问
+        $this->request = $app->request;
         if (in_array($this->request->action(), get_class_methods(__CLASS__))) {
             $this->error('Access without permission.');
         }
+        $this->get = $this->request->get();
+        $this->node = NodeService::instance()->getCurrent();
         $this->initialize();
     }
 
@@ -149,7 +158,7 @@ abstract class Controller extends stdClass
             throw new HttpResponseException(view($tpl, $vars));
         }
     }
-    
+
     /**
      * 模板变量赋值
      * @param mixed $name 要显示的模板变量
@@ -192,7 +201,7 @@ abstract class Controller extends stdClass
      * @param Model|BaseQuery|string $dbQuery
      * @param array|string|null $input
      * @return QueryHelper
-     * @throws DbException
+     * @throws \think\db\exception\DbException
      */
     protected function _query($dbQuery, $input = null): QueryHelper
     {
@@ -208,9 +217,9 @@ abstract class Controller extends stdClass
      * @param integer $limit 集合每页记录数
      * @param string $template 模板文件名称
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     protected function _page($dbQuery, bool $page = true, bool $display = true, $total = false, int $limit = 0, string $template = ''): array
     {
@@ -222,14 +231,14 @@ abstract class Controller extends stdClass
      * @param Model|BaseQuery|string $dbQuery
      * @param string $template 模板名称
      * @param string $field 指定数据对象主键
-     * @param array $where 额外更新条件
+     * @param mixed $where 额外更新条件
      * @param array $data 表单扩展数据
      * @return array|boolean
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    protected function _form($dbQuery, string $template = '', string $field = '', array $where = [], array $data = [])
+    protected function _form($dbQuery, string $template = '', string $field = '', $where = [], array $data = [])
     {
         return FormHelper::instance()->init($dbQuery, $template, $field, $where, $data);
     }
@@ -238,11 +247,12 @@ abstract class Controller extends stdClass
      * 快捷输入并验证（ 支持 规则 # 别名 ）
      * @param array $rules 验证规则（ 验证信息数组 ）
      * @param string|array $type 输入方式 ( post. 或 get. )
+     * @param callable|null $callable 异常处理操作
      * @return array
      */
-    protected function _vali(array $rules, $type = ''): array
+    protected function _vali(array $rules, $type = '', ?callable $callable = null): array
     {
-        return ValidateHelper::instance()->init($rules, $type);
+        return ValidateHelper::instance()->init($rules, $type, $callable);
     }
 
     /**
@@ -250,11 +260,11 @@ abstract class Controller extends stdClass
      * @param Model|BaseQuery|string $dbQuery
      * @param array $data 表单扩展数据
      * @param string $field 数据对象主键
-     * @param array $where 额外更新条件
+     * @param mixed $where 额外更新条件
      * @return boolean
-     * @throws DbException
+     * @throws \think\db\exception\DbException
      */
-    protected function _save($dbQuery, array $data = [], string $field = '', array $where = []): bool
+    protected function _save($dbQuery, array $data = [], string $field = '', $where = []): bool
     {
         return SaveHelper::instance()->init($dbQuery, $data, $field, $where);
     }
@@ -263,11 +273,11 @@ abstract class Controller extends stdClass
      * 快捷删除逻辑器
      * @param Model|BaseQuery|string $dbQuery
      * @param string $field 数据对象主键
-     * @param array $where 额外更新条件
+     * @param mixed $where 额外更新条件
      * @return boolean|null
-     * @throws DbException
+     * @throws \think\db\exception\DbException
      */
-    protected function _delete($dbQuery, string $field = '', array $where = []): ?bool
+    protected function _delete($dbQuery, string $field = '', $where = []): ?bool
     {
         return DeleteHelper::instance()->init($dbQuery, $field, $where);
     }

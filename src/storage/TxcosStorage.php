@@ -21,9 +21,6 @@ namespace think\admin\storage;
 use think\admin\Exception;
 use think\admin\extend\HttpExtend;
 use think\admin\Storage;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 腾讯云COS存储支持
@@ -58,10 +55,10 @@ class TxcosStorage extends Storage
 
     /**
      * 初始化入口
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     protected function initialize()
     {
@@ -73,20 +70,21 @@ class TxcosStorage extends Storage
         // 计算链接前缀
         $type = strtolower(sysconf('storage.txcos_http_protocol'));
         $domain = strtolower(sysconf('storage.txcos_http_domain'));
-        if ($type === 'auto') $this->prefix = "//{$domain}";
-        elseif ($type === 'http') $this->prefix = "http://{$domain}";
-        elseif ($type === 'https') $this->prefix = "https://{$domain}";
-        else throw new Exception('未配置腾讯云COS访问域名哦');
+        if ($type === 'auto') {
+            $this->prefix = "//{$domain}";
+        } elseif (in_array($type, ['http', 'https'])) {
+            $this->prefix = "{$type}://{$domain}";
+        } else throw new Exception('未配置腾讯云COS访问域名哦');
     }
 
     /**
      * 获取当前实例对象
      * @param null|string $name
      * @return TxcosStorage
-     * @throws Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\admin\Exception
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public static function instance(?string $name = null)
     {
@@ -233,11 +231,11 @@ class TxcosStorage extends Storage
      * 操作请求头信息签名
      * @param string $method 请求方式
      * @param string $soruce 资源名称
-     * @param array $header 请求头信息
      * @return array
      */
-    private function headerSign(string $method, string $soruce, array $header = []): array
+    private function headerSign(string $method, string $soruce): array
     {
+        $header = [];
         // 1.生成 KeyTime
         $startTimestamp = time();
         $endTimestamp = $startTimestamp + 3600;

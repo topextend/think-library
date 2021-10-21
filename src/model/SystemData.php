@@ -4,49 +4,27 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:49:07
+// |@LastEditTime : 2021-08-15 17:50:19
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
 // |@Description  : 
 // |@----------------------------------------------------------------------
-// |@FilePath     : Version.php
+// |@FilePath     : SystemData.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // ------------------------------------------------------------------------
 declare (strict_types=1);
 
-namespace think\admin\command;
+namespace think\admin\model;
 
-use think\admin\Command;
-use think\console\Input;
-use think\console\Output;
+use think\admin\Model;
 
 /**
- * 框架版本号指令
- * Class Version
- * @package think\admin\command
+ * 系统数据模型
+ * Class SystemData
+ * @package think\admin\model
  */
-class Version extends Command
+class SystemData extends Model
 {
-    /**
-     * 指令任务配置
-     */
-    protected function configure()
-    {
-        $this->setName('xadmin:version');
-        $this->setDescription("ThinkLibrary and ThinkPHP Version for ThinkAdmin");
-    }
-
-    /**
-     * 任务执行入口
-     * @param Input $input
-     * @param Output $output
-     * @return void
-     */
-    protected function execute(Input $input, Output $output)
-    {
-        $output->writeln("ThinkPHPCore {$this->app->version()}");
-        $output->writeln("ThinkLibrary {$this->process->version()}");
-    }
 }

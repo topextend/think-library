@@ -18,7 +18,6 @@ declare (strict_types=1);
 
 namespace think\admin\command;
 
-use Exception;
 use think\admin\Command;
 use think\admin\service\SystemService;
 use think\console\Input;
@@ -29,10 +28,13 @@ use think\helper\Str;
 /**
  * 数据库字符替换
  * Class Replace
- * @package app\wechat\command
+ * @package think\admin\command
  */
 class Replace extends Command
 {
+    /**
+     * 指令任务配置
+     */
     protected function configure()
     {
         $this->setName('xadmin:replace');
@@ -42,11 +44,11 @@ class Replace extends Command
     }
 
     /**
-     * 执行指令
+     * 任务执行入口
      * @param Input $input
      * @param Output $output
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     protected function execute(Input $input, Output $output)
     {
@@ -64,7 +66,7 @@ class Replace extends Command
                 }
             }
             if (count($data) > 0) {
-                if ($this->app->db->table($table)->where('1=1')->update($data) !== false) {
+                if ($this->app->db->table($table)->master(true)->where('1=1')->update($data) !== false) {
                     $this->setQueueMessage($total, $count, sprintf("成功替换数据表 %s", Str::studly($table)), 1);
                 } else {
                     $this->setQueueMessage($total, $count, sprintf("失败替换数据表 %s", Str::studly($table)), 1);

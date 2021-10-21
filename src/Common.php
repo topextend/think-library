@@ -21,9 +21,6 @@ use think\admin\service\QueueService;
 use think\admin\service\SystemService;
 use think\admin\service\TokenService;
 use think\admin\Storage;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\Model;
 
@@ -79,15 +76,29 @@ if (!function_exists('sysuri')) {
         return SystemService::instance()->sysuri($url, $vars, $suffix, $domain);
     }
 }
+if (!function_exists('admuri')) {
+    /**
+     * 生成后台 URL 地址
+     * @param string $url 路由地址
+     * @param array $vars PATH 变量
+     * @param boolean|string $suffix 后缀
+     * @param boolean|string $domain 域名
+     * @return string
+     */
+    function admuri(string $url = '', array $vars = [], $suffix = true, $domain = false): string
+    {
+        return sysuri('admin/index/index') . '#' . url($url, $vars, $suffix, $domain)->build();
+    }
+}
 if (!function_exists('sysconf')) {
     /**
      * 获取或配置系统参数
      * @param string $name 参数名称
      * @param mixed $value 参数内容
      * @return mixed
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     function sysconf(string $name = '', $value = null)
     {
@@ -104,9 +115,9 @@ if (!function_exists('sysdata')) {
      * @param string $name 数据名称
      * @param mixed $value 数据内容
      * @return mixed
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     function sysdata(string $name, $value = null)
     {
@@ -128,13 +139,32 @@ if (!function_exists('sysqueue')) {
      * @param integer $loops 循环等待时间
      * @return string
      * @throws \think\admin\Exception
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     function sysqueue(string $title, string $command, int $later = 0, array $data = [], int $rscript = 1, int $loops = 0): string
     {
         return QueueService::instance()->register($title, $command, $later, $data, $rscript, $loops)->code;
+    }
+}
+if (!function_exists('xss_safe')) {
+    /**
+     * 文本内容XSS过滤
+     * @param string $text
+     * @return string
+     */
+    function xss_safe(string $text): string
+    {
+        $rules = [
+            '#<script.*?<\/script>#i'        => '',
+            '#\s+on\w+=[\'\"]+.*?(\'|\")+#i' => '',
+            '#\s+on\w+=\s*.*?(\s|>)+#i'      => '$1',
+        ];
+        foreach ($rules as $rule => $value) {
+            $text = preg_replace($rule, $value, $text);
+        }
+        return $text;
     }
 }
 if (!function_exists('systoken')) {
@@ -237,7 +267,7 @@ if (!function_exists('enbase64url')) {
      */
     function enbase64url(string $string): string
     {
-        return rtrim(strtr(base64_encode($string), '+/', '-_'), '=');
+        return CodeExtend::enSafe64($string);
     }
 }
 if (!function_exists('debase64url')) {
@@ -248,7 +278,7 @@ if (!function_exists('debase64url')) {
      */
     function debase64url(string $string): string
     {
-        return base64_decode(str_pad(strtr($string, '-_', '+/'), strlen($string) % 4, '='));
+        return CodeExtend::deSafe64($string);
     }
 }
 if (!function_exists('http_get')) {
@@ -283,13 +313,13 @@ if (!function_exists('data_save')) {
      * @param Model|Query|string $dbQuery
      * @param array $data 需要保存或更新的数据
      * @param string $key 条件主键限制
-     * @param array $where 其它的where条件
+     * @param mixed $where 其它的where条件
      * @return boolean|integer
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
-    function data_save($dbQuery, array $data, string $key = 'id', array $where = [])
+    function data_save($dbQuery, array $data, string $key = 'id', $where = [])
     {
         return SystemService::instance()->save($dbQuery, $data, $key, $where);
     }
@@ -339,39 +369,5 @@ if (!function_exists('down_file')) {
     function down_file(string $source, bool $force = false, int $expire = 0): string
     {
         return Storage::down($source, $force, $expire)['url'] ?? $source;
-    }
-}
-if (!function_exists('format_values')) {
-    /**
-     * 格式字符串
-     * @param string $replacement 要替换的值
-     * @param string $subject 替换前值
-     * @return string
-     */
-    function format_values(string $replacement , string $subject): string
-    {
-        $result = preg_replace("/(@)|(#)|(,)|(。)|(，)/", $replacement, $subject);
-        return rtrim(preg_replace("/( )/", "", $result),',');
-    }
-}
-if (!function_exists('getAddonsPath')) {
-    /**
-     * 获取插件目录
-     * @return string
-     */
-    function getAddonsPath(): string
-    {
-        return $this->rootPath . 'addons' . DIRECTORY_SEPARATOR;
-    }
-}
-if (!function_exists('str_prefix')) {
-    /**
-     * 字符串前缀验证
-     * @param string $str 要验证码的字符串
-     * @param string $priefix 前缀字符
-     */
-    function str_prefix($str, $prefix) : bool
-    {
-        return strpos($str, $prefix) === 0 ? true : false;
     }
 }

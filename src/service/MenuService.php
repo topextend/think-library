@@ -18,12 +18,9 @@ declare (strict_types=1);
 
 namespace think\admin\service;
 
-use ReflectionException;
 use think\admin\extend\DataExtend;
+use think\admin\model\SystemMenu;
 use think\admin\Service;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 
 /**
  * 系统菜单管理服务
@@ -36,7 +33,7 @@ class MenuService extends Service
     /**
      * 获取可选菜单节点
      * @return array
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public function getList(): array
     {
@@ -51,15 +48,14 @@ class MenuService extends Service
     /**
      * 获取系统菜单树数据
      * @return array
-     * @throws ReflectionException
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \ReflectionException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function getTree(): array
     {
-        $query = $this->app->db->name('SystemMenu');
-        $query->where(['status' => 1])->order('sort desc,id asc');
+        $query = SystemMenu::mk()->where(['status' => 1])->order('sort desc,id asc');
         return $this->_buildData(DataExtend::arr2tree($query->select()->toArray()));
     }
 
@@ -67,7 +63,7 @@ class MenuService extends Service
      * 后台主菜单权限过滤
      * @param array $menus 当前菜单列表
      * @return array
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     private function _buildData(array $menus): array
     {
@@ -80,7 +76,7 @@ class MenuService extends Service
                 $menu['url'] = '#';
             } elseif ($menu['url'] === '#') {
                 unset($menus[$key]);
-            } elseif (preg_match('|^https?://|i', $menu['url'])) {
+            } elseif (preg_match('/^(https?:)?(\/\/|\\\\)/i', $menu['url'])) {
                 if (!!$menu['node'] && !$service->check($menu['node'])) {
                     unset($menus[$key]);
                 } elseif ($menu['params']) {
@@ -90,8 +86,7 @@ class MenuService extends Service
                 unset($menus[$key]);
             } else {
                 $node = join('/', array_slice(explode('/', $menu['url']), 0, 3));
-                $addons = substr_count($menu['url'], '/') > 2 && preg_match('/addons/', $menu['url']) ? "/addons" : '';
-                $menu['url'] = $addons. url($menu['url'])->build() . ($menu['params'] ? '?' . $menu['params'] : '');
+                $menu['url'] = url($menu['url'])->build() . ($menu['params'] ? '?' . $menu['params'] : '');
                 if (!$service->check($node)) unset($menus[$key]);
             }
         }

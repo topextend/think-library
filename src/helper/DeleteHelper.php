@@ -20,7 +20,6 @@ namespace think\admin\helper;
 
 use think\admin\Helper;
 use think\db\BaseQuery;
-use think\db\exception\DbException;
 use think\Model;
 
 /**
@@ -34,11 +33,11 @@ class DeleteHelper extends Helper
      * 逻辑器初始化
      * @param Model|BaseQuery|string $dbQuery
      * @param string $field 操作数据主键
-     * @param array $where 额外更新条件
-     * @return boolean|null
-     * @throws DbException
+     * @param mixed $where 额外更新条件
+     * @return boolean|null|void
+     * @throws \think\db\exception\DbException
      */
-    public function init($dbQuery, string $field = '', array $where = []): ?bool
+    public function init($dbQuery, string $field = '', $where = []): ?bool
     {
         $query = $this->buildQuery($dbQuery);
         $field = $field ?: ($query->getPk() ?: 'id');
@@ -76,7 +75,7 @@ class DeleteHelper extends Helper
         if ($result = (empty($data) ? $query->delete() : $query->update($data)) !== false) {
             // 模型自定义事件回调
             $model = $query->getModel();
-            if (method_exists($model, 'onAdminDelete')) {
+            if ($model instanceof \think\admin\Model) {
                 $model->onAdminDelete(strval($value));
             }
         }

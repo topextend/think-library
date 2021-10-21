@@ -21,9 +21,6 @@ namespace think\admin\helper;
 use think\admin\Helper;
 use think\admin\service\AdminService;
 use think\db\BaseQuery;
-use think\db\exception\DataNotFoundException;
-use think\db\exception\DbException;
-use think\db\exception\ModelNotFoundException;
 use think\db\Query;
 use think\exception\HttpResponseException;
 use think\Model;
@@ -44,9 +41,9 @@ class PageHelper extends Helper
      * @param integer $limit 集合每页记录数
      * @param string $template 模板文件名称
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function init($dbQuery, bool $page = true, bool $display = true, $total = false, int $limit = 0, string $template = ''): array
     {
@@ -93,9 +90,9 @@ class PageHelper extends Helper
      * @param Model|BaseQuery|string $dbQuery
      * @param string $template
      * @return array
-     * @throws DataNotFoundException
-     * @throws DbException
-     * @throws ModelNotFoundException
+     * @throws \think\db\exception\DataNotFoundException
+     * @throws \think\db\exception\DbException
+     * @throws \think\db\exception\ModelNotFoundException
      */
     public function layTable($dbQuery, string $template = ''): array
     {
@@ -112,12 +109,14 @@ class PageHelper extends Helper
             // 数据分页处理
             if (isset($get['page']) && isset($get['limit'])) {
                 $rows = $get['limit'] ?: 20;
-                $data = $query->paginate(['list_rows' => $rows, 'query' => $get], false)->toArray();
-                $result = ['msg' => '', 'code' => 0, 'count' => $data['total'], 'data' => $data['data']];
+                $total = $this->app->db->table($query->buildSql() . ' a')->count();
+                $data = $query->paginate(['list_rows' => $rows, 'query' => $get], $total)->toArray();
+                $result = ['msg' => '', 'code' => 0, 'count' => $total, 'data' => $data['data']];
             } else {
                 $data = $query->select()->toArray();
                 $result = ['msg' => '', 'code' => 0, 'count' => count($data), 'data' => $data];
             }
+            $this->xssFilter($result['data']);
             if (false !== $this->class->callback('_page_filter', $result['data'])) {
                 throw new HttpResponseException(json($result));
             } else {
@@ -130,10 +129,23 @@ class PageHelper extends Helper
     }
 
     /**
+     * 输出 XSS 过滤处理
+     * @param array $items
+     */
+    private function xssFilter(array &$items)
+    {
+        foreach ($items as &$item) if (is_array($item)) {
+            $this->xssFilter($item);
+        } elseif (is_string($item)) {
+            $item = htmlspecialchars($item, ENT_QUOTES);
+        }
+    }
+
+    /**
      * 绑定排序并返回操作对象
      * @param Model|BaseQuery|string $dbQuery
      * @return Query
-     * @throws DbException
+     * @throws \think\db\exception\DbException
      */
     public function autoSortQuery($dbQuery): Query
     {

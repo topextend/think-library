@@ -76,22 +76,26 @@ class JsonRpcServer
                 $error = ['code' => '-32600', 'message' => '无效的请求', 'meaning' => '发送的JSON不是一个有效的请求对象'];
                 $response = ['jsonrpc' => '2.0', 'id' => $request['id'] ?? '0', 'result' => null, 'error' => $error];
             } else try {
-                if (strtolower($request['method']) === '_get_class_name_') {
+                if ($object instanceof Exception) {
+                    throw $object;
+                } elseif (strtolower($request['method']) === '_get_class_name_') {
                     $response = ['jsonrpc' => '2.0', 'id' => $request['id'], 'result' => get_class($object), 'error' => null];
                 } elseif (method_exists($object, $request['method'])) {
-                    // Executes the task on local object
                     $result = call_user_func_array([$object, $request['method']], $request['params']);
                     $response = ['jsonrpc' => '2.0', 'id' => $request['id'], 'result' => $result, 'error' => null];
                 } else {
                     $error = ['code' => '-32601', 'message' => '找不到方法', 'meaning' => '该方法不存在或无效'];
                     $response = ['jsonrpc' => '2.0', 'id' => $request['id'], 'result' => null, 'error' => $error];
                 }
+            } catch (\think\admin\Exception $exception) {
+                $error = ['code' => $exception->getCode(), 'message' => $exception->getMessage(), 'meaning' => '数据处理异常'];
+                $response = ['jsonrpc' => '2.0', 'id' => $request['id'], 'result' => $exception->getData(), 'error' => $error];
             } catch (Exception $exception) {
-                $error = ['code' => $exception->getCode(), 'message' => $exception->getMessage()];
+                $error = ['code' => $exception->getCode(), 'message' => $exception->getMessage(), 'meaning' => '系统处理异常'];
                 $response = ['jsonrpc' => '2.0', 'id' => $request['id'], 'result' => null, 'error' => $error];
             }
             // Output the response
-            throw new HttpResponseException(json($response)->contentType('text/javascript'));
+            throw new HttpResponseException(json($response));
         }
     }
 
@@ -103,7 +107,7 @@ class JsonRpcServer
     {
         try {
             $object = new ReflectionClass($object);
-            echo "<h2>" . $object->getName() . "</h2><hr>";
+            echo "<h2>{$object->getName()}</h2><hr>";
             foreach ($object->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                 if (stripos($method->getName(), '_') === 0) continue;
                 $params = [];

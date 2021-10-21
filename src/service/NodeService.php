@@ -51,16 +51,14 @@ class NodeService extends Service
      */
     public function getCurrent(string $type = ''): string
     {
-        $url = substr(preg_replace("/.html/", '', $this->app->request->baseUrl()), 1);
-        $space = $this->app->getNamespace();
         $prefix = strtolower($this->app->http->getName());
         // 获取应用前缀节点
-        if ($type === 'module') return $prefix;
+        if (in_array($type, ['app', ['module']])) return $prefix;
         // 获取控制器前缀节点
         $middle = $this->nameTolower($this->app->request->controller());
         if ($type === 'controller') return $prefix . '/' . $middle;
         // 获取完整的权限节点
-        return preg_match('/addons/', $url) ? $url : $prefix . '/' . $middle . '/' . strtolower($this->app->request->action());
+        return $prefix . '/' . $middle . '/' . strtolower($this->app->request->action());
     }
 
     /**
@@ -117,16 +115,13 @@ class NodeService extends Service
         }
         /*! 排除内置方法，禁止访问内置方法 */
         $ignores = get_class_methods('\think\admin\Controller');
-        $addonsPath = $this->app->addons->getAddonsPath() ? $this->scanDirectory($this->app->addons->getAddonsPath()) : [];
-        $scanPath = array_merge($this->scanDirectory($this->app->getBasePath()), $addonsPath);
         /*! 扫描所有代码控制器节点，更新节点缓存 */
-        foreach ($scanPath as $file) {
+        foreach ($this->scanDirectory($this->app->getBasePath()) as $file) {
             $name = substr($file, strlen(strtr($this->app->getRootPath(), '\\', '/')) - 1);
             if (preg_match("|^([\w/]+)/(\w+)/controller/(.+)\.php$|i", $name, $matches)) {
                 [, $namespace, $appname, $classname] = $matches;
-                $addons = preg_match('|/addons$|', $namespace) ? 'addons/' : '';
                 $class = new ReflectionClass(strtr("{$namespace}/{$appname}/controller/{$classname}", '/', '\\'));
-                $prefix = strtolower(strtr("{$addons}{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
+                $prefix = strtolower(strtr("{$appname}/{$this->nameTolower($classname)}", '\\', '/'));
                 $data[$prefix] = $this->_parseComment($class->getDocComment() ?: '', $classname);
                 foreach ($class->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
                     if (in_array($metname = $method->getName(), $ignores)) continue;

@@ -4,60 +4,42 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:53:08
+// |@LastEditTime : 2021-08-15 17:50:19
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
 // |@Description  : 
 // |@----------------------------------------------------------------------
-// |@FilePath     : Exception.php
+// |@FilePath     : SystemNode.php
 // |@----------------------------------------------------------------------
 // |@Copyright (c) 2021 http://www.ladmin.cn   All rights reserved. 
 // ------------------------------------------------------------------------
-namespace think\admin;
+declare (strict_types=1);
+
+namespace think\admin\model;
+
+use think\admin\Model;
 
 /**
- * 自定义数据异常
- * Class Exception
- * @package think\admin
+ * 授权节点模型
+ * Class SystemNode
+ * @package think\admin\model
  */
-class Exception extends \Exception
+class SystemNode extends Model
 {
     /**
-     * 异常数据对象
-     * @var mixed
+     * 绑定模型名称
+     * @var string
      */
-    protected $data = [];
+    protected $name = 'SystemAuthNode';
 
     /**
-     * Exception constructor.
-     * @param string $message
-     * @param integer $code
-     * @param mixed $data
+     * 格式化创建时间
+     * @param string $value
+     * @return string
      */
-    public function __construct($message = "", $code = 0, $data = [])
+    public function getCreateAtAttr(string $value): string
     {
-        $this->code = $code;
-        $this->data = $data;
-        $this->message = $message;
-        parent::__construct($message, $code);
-    }
-
-    /**
-     * 获取异常停止数据
-     * @return mixed
-     */
-    public function getData()
-    {
-        return $this->data;
-    }
-
-    /**
-     * 设置异常停止数据
-     * @param mixed $data
-     */
-    public function setData($data)
-    {
-        $this->data = $data;
+        return format_datetime($value);
     }
 }

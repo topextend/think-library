@@ -86,6 +86,9 @@ class Install extends Command
         ],
     ];
 
+    /**
+     * 指令任务配置
+     */
     protected function configure()
     {
         $this->setName('xadmin:install');
@@ -94,6 +97,7 @@ class Install extends Command
     }
 
     /**
+     * 任务执行入口
      * @param Input $input
      * @param Output $output
      * @return void
