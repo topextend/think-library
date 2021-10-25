@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-15 17:52:59
+// |@LastEditTime : 2021-10-24 11:08:00
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -369,5 +369,29 @@ if (!function_exists('down_file')) {
     function down_file(string $source, bool $force = false, int $expire = 0): string
     {
         return Storage::down($source, $force, $expire)['url'] ?? $source;
+    }
+}
+if (!function_exists('str_prefix')) {
+    /**
+     * 字符串前缀验证
+     * @param string $str 要验证码的字符串
+     * @param string $priefix 前缀字符
+     */
+    function str_prefix($str, $prefix) : bool
+    {
+        return strpos($str, $prefix) === 0 ? true : false;
+    }
+}
+if (!function_exists('format_values')) {
+    /**
+     * 格式字符串
+     * @param string $replacement 要替换的值
+     * @param string $subject 替换前值
+     * @return string
+     */
+    function format_values(string $replacement , string $subject): string
+    {
+        $result = preg_replace("/(@)|(#)|(,)|(。)|(，)/", $replacement, $subject);
+        return rtrim(preg_replace("/( )/", "", $result),',');
     }
 }

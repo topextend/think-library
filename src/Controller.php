@@ -4,7 +4,7 @@
 // |@----------------------------------------------------------------------
 // |@Date         : 2021-08-01 11:23:21
 // |@----------------------------------------------------------------------
-// |@LastEditTime : 2021-08-19 18:17:00
+// |@LastEditTime : 2021-10-21 18:55:13
 // |@----------------------------------------------------------------------
 // |@LastEditors  : Jarmin <jarmin@ladmin.cn>
 // |@----------------------------------------------------------------------
@@ -327,9 +327,12 @@ abstract class Controller extends stdClass
     {
         if (str_prefix($name, 'model')) {
             $class = $this->app->parseClass('model', str_replace('model','', $name));
+            if (!class_exists($class)) {
+                $class = "\\think\\admin\\model\\" . str_replace('model','', $name);
+            }
         } else {
             throw new \think\exception\HttpException(404, '模型层需引用前缀:model');
         }
-        return M($class);
+        return $class;
     }
 }
